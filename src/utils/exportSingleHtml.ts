@@ -1,0 +1,749 @@
+/**
+ * Generates and downloads a complete, standalone Single-File HTML bundle
+ * containing all HTML, CSS, JavaScript, Web Audio API, and question data.
+ * Can be opened directly in any web browser without internet connection or build tools.
+ */
+
+export function generateSingleFileHtml(sentences: string[]): string {
+  const jsonSentences = JSON.stringify(sentences, null, 2);
+
+  return `<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Learn English with Ms Loan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    body {
+      font-family: 'Fredoka', 'Quicksand', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(180deg, #fce7f3 0%, #fdf2f8 40%, #fef9c3 100%);
+      overflow-x: hidden;
+      color: #3b0764;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Clouds */
+    .cloud {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 999px;
+      pointer-events: none;
+      filter: drop-shadow(0 4px 10px rgba(244, 114, 182, 0.15));
+    }
+    .cloud::before, .cloud::after {
+      content: '';
+      position: absolute;
+      background: inherit;
+      border-radius: 50%;
+    }
+
+    /* Hills and flowers */
+    .hills-container {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 120px;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Container */
+    .game-wrapper {
+      position: relative;
+      z-index: 10;
+      max-width: 1080px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 16px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+      position: relative;
+    }
+    .main-title {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 700;
+      color: #3b0764;
+      text-shadow: 2px 2px 0 #f472b6, 4px 4px 0 #fbcfe8;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .subtitle-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #fef08a;
+      border: 3px solid #fde047;
+      padding: 6px 18px;
+      border-radius: 999px;
+      font-size: clamp(0.9rem, 2.5vw, 1.15rem);
+      font-weight: 600;
+      color: #713f12;
+      box-shadow: 0 4px 0 #ca8a04;
+    }
+
+    /* Top bar buttons */
+    .top-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      margin-bottom: 12px;
+    }
+    .pill-btn {
+      background: white;
+      border: 2px solid #f472b6;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #701a75;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 3px 0 #f472b6;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .pill-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #f472b6;
+    }
+    .pill-btn.audio-btn {
+      background: #e0f2fe;
+      border-color: #38bdf8;
+      color: #0369a1;
+      box-shadow: 0 3px 0 #0284c7;
+    }
+
+    /* Floating Word Area */
+    .floating-area {
+      min-height: 180px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      padding: 24px 12px;
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    /* Word Card */
+    .word-card {
+      background: #ffffff;
+      border: 4px solid #f43f5e;
+      border-radius: 20px;
+      padding: 14px 26px;
+      font-size: clamp(1.2rem, 3.2vw, 1.85rem);
+      font-weight: 700;
+      color: #380d32;
+      box-shadow: 0 6px 0 #fb7185, 0 10px 18px rgba(244, 63, 94, 0.2);
+      cursor: pointer;
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s;
+      position: relative;
+    }
+    .word-card:active {
+      transform: scale(0.94);
+    }
+    .word-card.float-0 { animation: floatA 4.2s ease-in-out infinite; }
+    .word-card.float-1 { animation: floatB 4.8s ease-in-out infinite; }
+    .word-card.float-2 { animation: floatC 3.9s ease-in-out infinite; }
+    .word-card.float-3 { animation: floatD 5.1s ease-in-out infinite; }
+    .word-card.float-4 { animation: floatA 4.6s ease-in-out infinite; }
+
+    @keyframes floatA {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-12px) rotate(-1.5deg); }
+    }
+    @keyframes floatB {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-16px) rotate(2deg); }
+    }
+    @keyframes floatC {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-10px) rotate(-2deg); }
+    }
+    @keyframes floatD {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-14px) rotate(1.5deg); }
+    }
+
+    /* Answer Container (Khung viền vàng) */
+    .answer-container {
+      background: #fef9c3;
+      border: 5px solid #facc15;
+      border-radius: 32px;
+      padding: 24px 20px;
+      box-shadow: 0 8px 0 #ca8a04, 0 16px 28px rgba(202, 138, 4, 0.2);
+      min-height: 140px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24px;
+      position: relative;
+      transition: box-shadow 0.3s;
+    }
+    .answer-container.shake {
+      animation: shakeContainer 0.65s cubic-bezier(.36,.07,.19,.97) both;
+    }
+    .answer-container.correct {
+      border-color: #22c55e;
+      background: #dcfce7;
+      box-shadow: 0 8px 0 #15803d, 0 0 25px rgba(34, 197, 94, 0.6);
+    }
+
+    @keyframes shakeContainer {
+      0%, 100% { transform: translateX(0); }
+      15% { transform: translateX(-16px); }
+      30% { transform: translateX(14px); }
+      45% { transform: translateX(-10px); }
+      60% { transform: translateX(10px); }
+      75% { transform: translateX(-4px); }
+      90% { transform: translateX(4px); }
+    }
+
+    /* Dashed Slots */
+    .dashed-slot {
+      min-width: 80px;
+      min-height: 68px;
+      border: 3px dashed #701a75;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      background: rgba(254, 240, 138, 0.4);
+      transition: all 0.2s;
+    }
+
+    .dashed-slot .word-card {
+      border-color: #ec4899;
+      box-shadow: 0 4px 0 #be185d;
+      animation: none !important;
+    }
+
+    /* Actions Bar */
+    .bottom-actions {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: auto;
+      padding-bottom: 24px;
+      position: relative;
+      z-index: 20;
+    }
+    .action-btn {
+      font-size: 1.05rem;
+      font-weight: 700;
+      padding: 12px 24px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .action-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 rgba(0,0,0,0.2);
+    }
+    .btn-undo {
+      background: #f43f5e;
+      color: white;
+      box-shadow: 0 4px 0 #be123c;
+    }
+    .btn-reset {
+      background: #f59e0b;
+      color: white;
+      box-shadow: 0 4px 0 #b45309;
+    }
+    .btn-next {
+      background: linear-gradient(180deg, #4ade80 0%, #22c55e 100%);
+      color: white;
+      box-shadow: 0 4px 0 #15803d;
+      transition: all 0.2s;
+    }
+    .btn-next:disabled {
+      background: #e2e8f0;
+      color: #94a3b8;
+      box-shadow: 0 4px 0 #cbd5e1;
+      cursor: not-allowed;
+      opacity: 0.65;
+    }
+    .btn-next.active-pulse {
+      animation: bounceNext 1s infinite;
+    }
+    @keyframes bounceNext {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+
+    /* Modal Admin / Settings */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 16px;
+    }
+    .modal-card {
+      background: white;
+      border: 4px solid #f472b6;
+      border-radius: 28px;
+      width: 100%;
+      max-width: 580px;
+      padding: 24px;
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.2);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-card h3 {
+      font-size: 1.5rem;
+      color: #701a75;
+      margin-bottom: 12px;
+    }
+    textarea {
+      width: 100%;
+      height: 140px;
+      padding: 12px;
+      border-radius: 16px;
+      border: 2px solid #fbcfe8;
+      font-family: inherit;
+      font-size: 1rem;
+      margin-bottom: 16px;
+      outline: none;
+      resize: vertical;
+    }
+    textarea:focus {
+      border-color: #ec4899;
+    }
+
+    /* Canvas Confetti */
+    #confetti-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 90;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="confetti-canvas"></canvas>
+
+  <div class="game-wrapper">
+    <div class="top-controls">
+      <button class="pill-btn" onclick="openAdminModal()">⚙️ Settings / Edit</button>
+      <div id="progress-indicator" style="font-weight: 700; color: #701a75;">Sentence 1 / 1</div>
+      <button class="pill-btn audio-btn" onclick="speakCurrentSentence()">🔊 Pronounce</button>
+    </div>
+
+    <header>
+      <h1 class="main-title">REORDER THE WORDS</h1>
+      <div class="subtitle-badge">
+        <span>👉</span>
+        <span id="subtitle-text">Drag and drop or tap words to arrange the sentence</span>
+      </div>
+    </header>
+
+    <!-- Khu vực trên: Vùng thả nổi các từ -->
+    <div class="floating-area" id="floating-words-box"></div>
+
+    <!-- Khu vực dưới: Khung viền vàng với các ô trống nét đứt -->
+    <div class="answer-container" id="answer-box"></div>
+
+    <div class="bottom-actions">
+      <button class="action-btn btn-undo" onclick="undoLastWord()">↩ UNDO</button>
+      <button class="action-btn btn-reset" onclick="resetCurrentSentence()">🔄 REPLAY</button>
+      <button class="action-btn btn-next" id="next-btn" onclick="nextQuestion()" disabled>NEXT ➔</button>
+    </div>
+  </div>
+
+  <!-- Modal Admin -->
+  <div class="modal-overlay" id="admin-modal">
+    <div class="modal-card">
+      <h3>⚙️ Settings & Question Editor</h3>
+      <p style="font-size: 0.95rem; color: #64748b; margin-bottom: 12px;">
+        Enter sentences (one sentence per line). Words will be automatically split by spaces:
+      </p>
+      <textarea id="sentences-input" placeholder="I like reading books.&#10;The cat is sleeping on the sofa.&#10;She plays the piano very well."></textarea>
+
+      <div style="margin-bottom: 16px;">
+        <label style="display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 4px;">📂 Or upload text file (.txt):</label>
+        <input type="file" accept=".txt" onchange="handleFileUpload(event)" style="font-size: 0.9rem;">
+      </div>
+
+      <div style="display: flex; gap: 8px; justify-content: flex-end;">
+        <button class="pill-btn" onclick="closeAdminModal()">Cancel</button>
+        <button class="pill-btn" style="background: #22c55e; color: white; border-color: #16a34a;" onclick="saveSentences()">💾 Save & Start</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- WEB AUDIO API SYNTHESIZER ---
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+    function getAudioContext() {
+      if (!audioCtx && AudioContextClass) {
+        audioCtx = new AudioContextClass();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playPopSound() {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const now = ctx.currentTime;
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(650, now);
+      osc.frequency.exponentialRampToValueAtTime(180, now + 0.08);
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.09);
+    }
+
+    function playDropSound() {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const now = ctx.currentTime;
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(420, now);
+      osc.frequency.exponentialRampToValueAtTime(220, now + 0.12);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.13);
+    }
+
+    function playWrongSound() {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      [0, 0.18].forEach(delay => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(180, now + delay);
+        osc.frequency.linearRampToValueAtTime(110, now + delay + 0.14);
+        gain.gain.setValueAtTime(0.2, now + delay);
+        gain.gain.linearRampToValueAtTime(0.01, now + delay + 0.14);
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(550, now + delay);
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + delay);
+        osc.stop(now + delay + 0.15);
+      });
+    }
+
+    function playCorrectSound() {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      const notes = [523.25, 659.25, 783.99, 1046.50];
+      notes.forEach((freq, idx) => {
+        const startTime = now + idx * 0.08;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, startTime);
+        gain.gain.setValueAtTime(0.25, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.55);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(startTime);
+        osc.stop(startTime + 0.6);
+      });
+    }
+
+    // --- GAME STATE ---
+    let defaultQuestions = ${jsonSentences};
+    let sentences = [];
+    try {
+      const saved = localStorage.getItem('reorder_sentences');
+      sentences = saved ? JSON.parse(saved) : defaultQuestions;
+    } catch {
+      sentences = defaultQuestions;
+    }
+
+    let currentIndex = 0;
+    let targetWords = [];
+    let floatingWords = [];
+    let placedWords = [];
+    let isChecking = false;
+
+    function initCurrentQuestion() {
+      if (sentences.length === 0) return;
+      const sentence = sentences[currentIndex].trim();
+      targetWords = sentence.split(/\\s+/).filter(w => w.length > 0);
+      
+      // Shuffle words for floating area
+      floatingWords = [...targetWords].map((word, i) => ({ id: i + '_' + word, text: word }));
+      for (let i = floatingWords.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [floatingWords[i], floatingWords[j]] = [floatingWords[j], floatingWords[i]];
+      }
+
+      placedWords = [];
+      isChecking = false;
+
+      const nextBtn = document.getElementById('next-btn');
+      if (nextBtn) {
+        nextBtn.disabled = true;
+        nextBtn.classList.remove('active-pulse');
+      }
+
+      renderUI();
+    }
+
+    function renderUI() {
+      const progressElem = document.getElementById('progress-indicator');
+      progressElem.innerText = \`Sentence \${currentIndex + 1} / \${sentences.length}\`;
+
+      const floatingBox = document.getElementById('floating-words-box');
+      floatingBox.innerHTML = '';
+      floatingWords.forEach((item, idx) => {
+        const card = document.createElement('div');
+        card.className = \`word-card float-\${idx % 5}\`;
+        card.innerText = item.text;
+        card.onclick = () => pickWord(item);
+        floatingBox.appendChild(card);
+      });
+
+      const answerBox = document.getElementById('answer-box');
+      answerBox.innerHTML = '';
+      answerBox.className = 'answer-container';
+
+      for (let i = 0; i < targetWords.length; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'dashed-slot';
+        if (placedWords[i]) {
+          const item = placedWords[i];
+          const placedCard = document.createElement('div');
+          placedCard.className = 'word-card';
+          placedCard.innerText = item.text;
+          placedCard.onclick = () => removePlacedWord(i);
+          slot.appendChild(placedCard);
+        }
+        answerBox.appendChild(slot);
+      }
+    }
+
+    function pickWord(item) {
+      if (isChecking) return;
+      playPopSound();
+      playDropSound();
+      floatingWords = floatingWords.filter(w => w.id !== item.id);
+      placedWords.push(item);
+      renderUI();
+      checkAnswerIfFull();
+    }
+
+    function removePlacedWord(index) {
+      if (isChecking) return;
+      playPopSound();
+      const removed = placedWords.splice(index, 1)[0];
+      floatingWords.push(removed);
+      renderUI();
+    }
+
+    function undoLastWord() {
+      if (isChecking || placedWords.length === 0) return;
+      removePlacedWord(placedWords.length - 1);
+    }
+
+    function resetCurrentSentence() {
+      if (isChecking) return;
+      initCurrentQuestion();
+    }
+
+    function nextQuestion() {
+      const nextBtn = document.getElementById('next-btn');
+      if (!nextBtn || nextBtn.disabled) return;
+      playPopSound();
+
+      if (currentIndex < sentences.length - 1) {
+        currentIndex++;
+        initCurrentQuestion();
+      } else {
+        alert('🎉 CONGRATULATIONS! You completed the sentences well. 🎉');
+        currentIndex = 0;
+        initCurrentQuestion();
+      }
+    }
+
+    function checkAnswerIfFull() {
+      if (placedWords.length < targetWords.length) return;
+      isChecking = true;
+
+      const isCorrect = placedWords.every((item, i) => item.text === targetWords[i]);
+      const answerBox = document.getElementById('answer-box');
+
+      if (isCorrect) {
+        playCorrectSound();
+        answerBox.classList.add('correct');
+        triggerConfetti();
+
+        const nextBtn = document.getElementById('next-btn');
+        if (nextBtn) {
+          nextBtn.disabled = false;
+          nextBtn.classList.add('active-pulse');
+        }
+      } else {
+        playWrongSound();
+        answerBox.classList.add('shake');
+        setTimeout(() => {
+          answerBox.classList.remove('shake');
+          // Return words to floating area
+          floatingWords = [...floatingWords, ...placedWords];
+          placedWords = [];
+          isChecking = false;
+          renderUI();
+        }, 1100);
+      }
+    }
+
+    function speakCurrentSentence() {
+      if ('speechSynthesis' in window) {
+        const text = sentences[currentIndex];
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.85;
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    // Admin Modal
+    function openAdminModal() {
+      document.getElementById('sentences-input').value = sentences.join('\\n');
+      document.getElementById('admin-modal').style.display = 'flex';
+    }
+    function closeAdminModal() {
+      document.getElementById('admin-modal').style.display = 'none';
+    }
+    function saveSentences() {
+      const raw = document.getElementById('sentences-input').value;
+      const list = raw.split('\\n').map(s => s.trim()).filter(s => s.length > 0);
+      if (list.length === 0) {
+        alert('Please enter at least one sentence!');
+        return;
+      }
+      sentences = list;
+      currentIndex = 0;
+      try {
+        localStorage.setItem('reorder_sentences', JSON.stringify(sentences));
+      } catch(e){}
+      closeAdminModal();
+      initCurrentQuestion();
+    }
+    function handleFileUpload(evt) {
+      const file = evt.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        document.getElementById('sentences-input').value = e.target.result;
+      };
+      reader.readAsText(file);
+    }
+
+    // Mini confetti on correct
+    function triggerConfetti() {
+      const canvas = document.getElementById('confetti-canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const particles = [];
+      const colors = ['#f43f5e', '#ec4899', '#f59e0b', '#10b981', '#3b82f6'];
+      for (let i = 0; i < 60; i++) {
+        particles.push({
+          x: canvas.width / 2,
+          y: canvas.height * 0.4,
+          vx: (Math.random() - 0.5) * 14,
+          vy: Math.random() * -10 - 4,
+          size: Math.random() * 8 + 6,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          alpha: 1
+        });
+      }
+      function loop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach((p, i) => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.3;
+          p.alpha -= 0.015;
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = Math.max(0, p.alpha);
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        if (particles.some(p => p.alpha > 0)) {
+          requestAnimationFrame(loop);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+      loop();
+    }
+
+    initCurrentQuestion();
+  </script>
+</body>
+</html>`;
+}
+
+export function downloadHtmlFile(content: string, filename = 'reorder-the-words-game.html') {
+  const blob = new Blob([content], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
